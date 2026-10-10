@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AuraLog — Modern Engineering & Design Journal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            scroll-behavior: smooth;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(156, 163, 175, 0.4);
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(107, 114, 128, 0.7);
+        }
+        .prose pre {
+            background-color: #0f172a;
+            color: #f8fafc;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            overflow-x: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.875rem;
+            margin: 1.25rem 0;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .prose h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-top: 1.75rem;
+            margin-bottom: 0.75rem;
+        }
+        .prose h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-top: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .prose p {
+            margin-bottom: 1.15rem;
+            line-height: 1.75;
+        }
+        .prose ul {
+            list-style-type: disc;
+            padding-left: 1.5rem;
+            margin-bottom: 1.25rem;
+        }
+        .prose blockquote {
+            border-left: 4px solid #6366f1;
+            padding-left: 1rem;
+            font-style: italic;
+            margin: 1.25rem 0;
+            opacity: 0.9;
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.25s ease-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-screen flex flex-col transition-colors duration-200">
+
+    <header class="sticky top-0 z-40 w-full backdrop-blur-md bg-white/80 dark:bg-slate-900/80 border-b border-slate-200/80 dark:border-slate-800 transition-colors">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+            
+            <!-- Logo & Brand -->
+            <div class="flex items-center gap-3 cursor-pointer" onclick="navigateToHome()">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-500 flex items-center justify-center text-white font-black text-xl shadow-md shadow-indigo-500/20">
+                    A
+                </div>
+                <div>
+                    <span class="font-extrabold text-lg sm:text-xl tracking-tight text-slate-900 dark:text-white flex items-center gap-1.5">
+                        Aura<span class="text-indigo-600 dark:text-indigo-400">Log</span>
+                    </span>
+                    <span class="hidden sm:block text-[10px] tracking-wider font-semibold uppercase text-slate-400 dark:text-slate-500 -mt-1">Digital Journal</span>
+                </div>
+            </div>
+
+            <!-- Search input bar (Desktop) -->
+            <div class="hidden md:flex flex-1 max-w-xs relative items-center">
+                <svg class="w-4 h-4 absolute left-3 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <input 
+                    type="text" 
+                    id="desktopSearchInput" 
+                    placeholder="Search articles, keywords..." 
+                    oninput="handleSearch(this.value)"
+                    class="w-full bg-slate-100 dark:bg-slate-800/80 text-sm text-slate-800 dark:text-slate-100 pl-9 pr-4 py-2 rounded-xl border border-transparent focus:border-indigo-500 focus:bg-white dark:focus:bg-slate-800 focus:outline-none transition-all"
+                >
+            </div>
+
+            <!-- Navigation Controls -->
+            <div class="flex items-center gap-2 sm:gap-3">
+                <button 
+                    onclick="openCreatePostModal()" 
+                    class="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 active:scale-95 rounded-xl shadow-sm transition-all"
+                    title="Write a new article"
+                >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    New Post
+                </button>
+
+                <button 
+                    onclick="openGithubGuideModal()" 
+                    class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition-all"
+                    title="How to deploy to GitHub Pages"
+                >
+                    <svg class="w-4 h-4 text-emerald-500" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
+                    <span class="hidden sm:inline">Deploy Guide</span>
+                </button>
+
+                <!-- Dark Mode Toggle Button -->
+                <button 
+                    id="themeToggleBtn"
+                    onclick="toggleTheme()" 
+                    class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 focus:outline-none transition-colors"
+                    aria-label="Toggle dark mode"
+                >
+                    <svg id="sunIcon" class="w-4 h-4 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                    <svg id="moonIcon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Search Row -->
+        <div class="px-4 pb-3 md:hidden">
+            <input 
+                type="text" 
+                id="mobileSearchInput" 
+                placeholder="Search articles..." 
+                oninput="handleSearch(this.value)"
+                class="w-full bg-slate-100 dark:bg-slate-800 text-sm text-slate-800 dark:text-slate-100 px-3.5 py-2 rounded-xl border border-transparent focus:border-indigo-500 focus:outline-none"
+            >
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- ======================= HOME / LIST VIEW ======================= -->
+        <div id="homeView" class="animate-fade-in space-y-10">
+            
+            <!-- Hero Banner -->
+            <section class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-900 via-indigo-800 to-slate-900 text-white p-8 sm:p-12 shadow-xl shadow-indigo-950/20">
+                <div class="absolute -right-12 -top-12 w-64 h-64 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none"></div>
+                <div class="relative z-10 max-w-2xl space-y-4">
+                    <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider bg-indigo-500/30 text-indigo-200 border border-indigo-400/30">
+                        Knowledge Base & Insights
+                    </span>
+                    <h1 class="text-3xl sm:text-5xl font-extrabold tracking-tight leading-tight">
+                        Thoughts, code, and systems design.
+                    </h1>
+                    <p class="text-slate-300 text-base sm:text-lg leading-relaxed">
+                        A ready-to-deploy static blog template written in pure HTML & Vanilla JS. Zero complex bundlers, zero configuration required.
+                    </p>
+                    <div class="pt-2 flex flex-wrap gap-3">
+                        <button onclick="scrollToArticles()" class="px-5 py-2.5 bg-white text-indigo-900 rounded-xl font-semibold text-sm hover:bg-slate-100 active:scale-95 transition-all shadow-md">
+                            Browse Articles
+                        </button>
+                        <button onclick="openCreatePostModal()" class="px-5 py-2.5 bg-indigo-700/60 border border-indigo-400/40 text-white rounded-xl font-semibold text-sm hover:bg-indigo-600/60 active:scale-95 transition-all">
+                            Write Story
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Category Filter Tabs -->
+            <section id="articlesSection" class="space-y-6">
+                <div class="flex items-center justify-between flex-wrap gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
+                    <div class="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 max-w-full" id="categoryPills">
+                        <!-- Populated via JS -->
+                    </div>
+                    <span id="postCountBadge" class="text-xs font-medium text-slate-500 dark:text-slate-400">
+                        Showing all posts
+                    </span>
+                </div>
+
+                <!-- Articles Grid -->
+                <div id="postsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+                    <!-- Populated dynamically -->
+                </div>
+
+                <!-- Empty State -->
+                <div id="noResultsState" class="hidden text-center py-16 px-4">
+                    <div class="w-16 h-16 mx-auto rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 mb-3">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-800 dark:text-slate-200">No posts found</h3>
+                    <p class="text-sm text-slate-500 dark:text-slate-400 max-w-sm mx-auto mt-1">Try refining your keyword search or selecting another category.</p>
+                </div>
+            </section>
+        </div>
+
+        <!-- ======================= SINGLE POST VIEW ======================= -->
+        <article id="postDetailView" class="hidden animate-fade-in max-w-3xl mx-auto space-y-8">
+            <!-- Navigation back -->
+            <button 
+                onclick="navigateToHome()" 
+                class="inline-flex items-center gap-2 text-sm font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 group transition-colors"
+            >
+                <svg class="w-4 h-4 transform group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                Back to all articles
+            </button>
+
+            <!-- Article Header -->
+            <div class="space-y-4">
+                <div class="flex items-center gap-2">
+                    <span id="detailCategory" class="px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-300">
+                        Category
+                    </span>
+                    <span class="text-xs text-slate-400">•</span>
+                    <span id="detailReadTime" class="text-xs text-slate-500 dark:text-slate-400">5 min read</span>
+                </div>
+
+                <h1 id="detailTitle" class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight">
+                    Article Title
+                </h1>
+
+                <!-- Author & Meta bar -->
+                <div class="flex items-center justify-between border-y border-slate-200 dark:border-slate-800 py-4">
+                    <div class="flex items-center gap-3">
+                        <div id="detailAuthorAvatar" class="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold text-sm">
+                            JS
+                        </div>
+                        <div>
+                            <div id="detailAuthorName" class="font-semibold text-sm text-slate-900 dark:text-white">Alex River</div>
+                            <div id="detailDate" class="text-xs text-slate-500 dark:text-slate-400">Oct 24, 2026</div>
+                        </div>
+                    </div>
+                    <!-- Share Button -->
+                    <button 
+                        onclick="copyArticleLink()" 
+                        class="px-3.5 py-1.5 text-xs font-medium bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg flex items-center gap-1.5 transition-colors"
+                        title="Copy article link"
+                    >
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                        <span id="copyBtnText">Share Link</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Article Body Content -->
+            <div id="detailContent" class="prose dark:prose-invert max-w-none text-slate-700 dark:text-slate-300 text-base leading-relaxed">
+                <!-- Injected via JS -->
+            </div>
+
+            <!-- Tags Section -->
+            <div id="detailTags" class="flex flex-wrap gap-2 pt-4 border-t border-slate-200 dark:border-slate-800">
+                <!-- Tag pills injected here -->
+            </div>
+
+            <!-- Comments Section -->
+            <section class="pt-8 border-t border-slate-200 dark:border-slate-800 space-y-6">
+                <h3 class="text-xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+                    Responses & Comments
+                    <span id="commentCountBadge" class="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400">0</span>
+                </h3>
+
+                <!-- Post Comment Form -->
+                <form id="commentForm" onsubmit="handleCommentSubmit(event)" class="space-y-3 bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <input 
+                            type="text" 
+                            id="commenterName" 
+                            placeholder="Your Name *" 
+                            required 
+                            class="px-3.5 py-2 text-sm rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:border-indigo-500"
+                        >
+                        <input 
+                            type="email" 
+                            id="commenterEmail" 
+                            placeholder="Your Email (Optional)" 
+                            class="px-3.5 py-2 text-sm rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:border-indigo-500"
+                        >
+                    </div>
+                    <textarea 
+                        id="commentText" 
+                        rows="3" 
+                        placeholder="Write your constructive thoughts..." 
+                        required 
+                        class="w-full px-3.5 py-2 text-sm rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:border-indigo-500"
+                    ></textarea>
+                    <div class="flex justify-end">
+                        <button 
+                            type="submit" 
+                            class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-sm active:scale-95 transition-all"
+                        >
+                            Publish Comment
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Comments Display List -->
+                <div id="commentsList" class="space-y-3">
+                    <!-- Populated dynamically -->
+                </div>
+            </section>
+        </article>
+
+    </main>
+
+    <!-- Modal: GitHub Pages Guide -->
+    <div id="githubModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-200 dark:border-slate-800 relative space-y-5 animate-fade-in max-h-[90vh] overflow-y-auto">
+            <button onclick="closeGithubGuideModal()" class="absolute top-5 right-5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold">
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold text-slate-900 dark:text-white">Deploy to GitHub Pages</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Go live in under 2 minutes directly from desktop</p>
+                </div>
+            </div>
+
+            <ol class="space-y-4 text-xs sm:text-sm text-slate-600 dark:text-slate-300 list-decimal list-inside">
+                <li class="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl">
+                    <span class="font-semibold text-slate-900 dark:text-white">Save File:</span> Keep this file named <code class="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-indigo-500 font-mono text-xs">index.html</code> in a dedicated folder.
+                </li>
+                <li class="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl space-y-1">
+                    <span class="font-semibold text-slate-900 dark:text-white">Create a GitHub Repository:</span>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Head to GitHub.com &rarr; "New Repository" &rarr; set it to Public.</p>
+                </li>
+                <li class="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl space-y-1.5">
+                    <span class="font-semibold text-slate-900 dark:text-white">Push from Terminal or Drag & Drop:</span>
+                    <pre class="bg-slate-950 text-slate-200 p-2.5 rounded-lg text-xs font-mono overflow-x-auto">git init
+git add index.html
+git commit -m "feat: initial static blog"
+git branch -M main
+git remote add origin https://github.com/&lt;user&gt;/&lt;repo&gt;.git
+git push -u origin main</pre>
+                </li>
+                <li class="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl">
+                    <span class="font-semibold text-slate-900 dark:text-white">Enable GitHub Pages:</span> Go to repository <strong>Settings &rarr; Pages</strong>. Choose Source: <code>Deploy from a branch</code> &rarr; select <code>main</code> branch & <code>/ (root)</code> &rarr; click <strong>Save</strong>.
+                </li>
+            </ol>
+            <div class="pt-2">
+                <button onclick="closeGithubGuideModal()" class="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-indigo-600 dark:hover:bg-indigo-700 text-white font-semibold text-sm transition-all">
+                    Got it, ready to deploy!
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Create Post -->
+    <div id="createPostModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-200 dark:border-slate-800 relative space-y-4 animate-fade-in max-h-[90vh] overflow-y-auto">
+            <button onclick="closeCreatePostModal()" class="absolute top-5 right-5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+            <h3 class="text-xl font-bold text-slate-900 dark:text-white">Write New Article</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Post is preserved locally in your browser storage.</p>
+
+            <form onsubmit="handleNewPostSubmit(event)" class="space-y-4 text-sm">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Title *</label>
+                    <input type="text" id="newPostTitle" required placeholder="e.g. Modern Frontend System Architecture" class="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:border-indigo-500">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Category *</label>
+                        <select id="newPostCategory" class="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:border-indigo-500">
+                            <option value="Tech">Tech</option>
+                            <option value="Design">Design</option>
+                            <option value="Architecture">Architecture</option>
+                            <option value="Tutorials">Tutorials</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Author Name *</label>
+                        <input type="text" id="newPostAuthor" required placeholder="e.g. Jane Doe" class="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:border-indigo-500">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Excerpt / Brief Summary *</label>
+                    <input type="text" id="newPostExcerpt" required placeholder="Brief 1-2 line summary for the card view" class="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:border-indigo-500">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Article Body (Supports HTML/Paragraphs) *</label>
+                    <textarea id="newPostContent" required rows="6" placeholder="<p>Write your article here...</p>" class="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:border-indigo-500 font-mono text-xs"></textarea>
+                </div>
+
+                <div class="pt-2 flex justify-end gap-2">
+                    <button type="button" onclick="closeCreatePostModal()" class="px-4 py-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 font-medium text-xs">
+                        Cancel
+                    </button>
+                    <button type="submit" class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs active:scale-95 transition-all">
+                        Publish Post
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Notification Toast Element -->
+    <div id="toastMessage" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 px-4 py-3 rounded-2xl shadow-xl flex items-center gap-2.5 text-sm font-medium"></div>
+
+    <footer class="mt-auto border-t border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 py-8 text-center text-xs text-slate-500 dark:text-slate-400">
+        <div class="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p>&copy; 2026 AuraLog Journal. Ready for GitHub Pages deployment.</p>
+            <div class="flex items-center gap-4">
+                <a href="https://github.com" target="_blank" rel="noopener noreferrer" class="hover:text-indigo-600 transition-colors">GitHub</a>
+                <span>•</span>
+                <button onclick="openGithubGuideModal()" class="hover:text-indigo-600 transition-colors">Deployment Tips</button>
+                <span>•</span>
+                <button onclick="scrollToArticles()" class="hover:text-indigo-600 transition-colors">Back to Top</button>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const INITIAL_POSTS = [
+            {
+                id: "building-zero-runtime-sites",
+                title: "Building Blazing Fast Zero-Runtime Web Apps",
+                category: "Tech",
+                readTime: "4 min read",
+                author: "Sarah Lin",
+                date: "Oct 08, 2026",
+                excerpt: "Why modern web architects are turning back to ultra-lean static HTML and browser native capabilities without heavyweight bundles.",
+                content: `
+                    <p>Modern frontend engineering has often swung like a pendulum between full single-page-app abstractions and lean static sites. As browsers natively implement CSS nesting, responsive grid containers, and ES modules, the necessity for multi-megabyte toolchains diminishes for publishing platforms.</p>
+                    <h2>The Static First Advantage</h2>
+                    <p>Static pages delivered directly from a CDN or GitHub Pages edge node score 100/100 across Core Web Vitals. There is no hydration overhead, no layout shifts, and security vulnerabilities diminish to virtually zero.</p>
+                    <pre><code>// Pure vanilla fetch and render example
+async function fetchInsights() {
+    const res = await fetch('/api/insights.json');
+    return await res.json();
+}</code></pre>
+                    <blockquote>"Simplicity is prerequisite for reliability." — Edsger W. Dijkstra</blockquote>
+                    <p>By relying on modern standard CSS and lightweight Vanilla JS, we ensure longevity. An index.html deployed in 2026 will still execute smoothly in 2036.</p>
+                `,
+                tags: ["WebDev", "Performance", "Architecture"]
+            },
+            {
+                id: "typography-and-spacing-rules",
+                title: "The Subtle Art of Typography & Visual Rhythm",
+                category: "Design",
+                readTime: "5 min read",
+                author: "Julian Vance",
+                date: "Oct 04, 2026",
+                excerpt: "Deliberate typography rules that turn cluttered technical writeups into immersive, highly legible editorial journals.",
+                content: `
+                    <p>Visual hierarchy is the quiet guide of any reading experience. When a reader opens an article, their subconscious immediately scans line height, letter spacing, and contrast ratios before processing single words.</p>
+                    <h2>1. The 65-Character Line Limit</h2>
+                    <p>The optimal reading line length is approximately 45 to 75 characters. Exceeding this causes eye fatigue as the reader's gaze wanders back across the screen to locate the next line.</p>
+                    <h3>2. Typographic Scale and Harmony</h3>
+                    <p>Pick a deliberate scale factor, such as the Major Third (1.250) or Perfect Fourth (1.333). When headings and subheadings follow mathematical relationships, the entire layout feels unified.</p>
+                    <blockquote>"Good design is as little design as possible." — Dieter Rams</blockquote>
+                    <p>Incorporate ample negative space between code listings and quotes to let readers digest dense technical subjects.</p>
+                `,
+                tags: ["UI/UX", "Typography", "CSS"]
+            },
+            {
+                id: "github-pages-masterclass",
+                title: "Mastering GitHub Pages for Effortless Portfolios",
+                category: "Tutorials",
+                readTime: "3 min read",
+                author: "Alex River",
+                date: "Sep 29, 2026",
+                excerpt: "A step-by-step tutorial on leveraging GitHub Pages as a free, scalable, edge-cached hosting solution.",
+                content: `
+                    <p>GitHub Pages remains one of the greatest free assets in software engineering. Whether for project docs, developer portfolios, or personal publications, its global CDN is fast, dependable, and free.</p>
+                    <h2>Key Prerequisites</h2>
+                    <ul>
+                        <li>A free GitHub account</li>
+                        <li>Git installed locally (or using GitHub web interface directly)</li>
+                        <li>A static entry point like this <code>index.html</code></li>
+                    </ul>
+                    <h2>Configuring Custom Domains & SSL</h2>
+                    <p>Under the repository settings, you can attach your custom domain (like <code>blog.yourdomain.com</code>). GitHub automatically provisions a Let's Encrypt SSL certificate within minutes.</p>
+                `,
+                tags: ["GitHub", "DevOps", "Beginner"]
+            },
+            {
+                id: "micro-frontends-reality-check",
+                title: "Micro-Frontends in 2026: Pragmatism vs Hype",
+                category: "Architecture",
+                readTime: "6 min read",
+                author: "Elena Rostova",
+                date: "Sep 20, 2026",
+                excerpt: "Analyzing when decentralized frontend teams genuinely benefit from independent deployments, and when monoliths win.",
+                content: `
+                    <p>Distributed frontend systems were pitched as the holy grail for enterprise velocity. However, runtime integration bugs and duplicated dependencies often outweighed the theoretical gains.</p>
+                    <h2>When It Makes Sense</h2>
+                    <p>Micro-frontends shine exclusively when multiple multidisciplinary squads need independent release cycles across separate business domains (e.g., Checkout vs Product Catalog).</p>
+                    <pre><code>// Module federation contract
+const RemoteModule = React.lazy(() => import('checkout/CartWidget'));
+</code></pre>
+                    <p>For personal websites and content blogs, keep your stack centralized and uncluttered.</p>
+                `,
+                tags: ["Architecture", "SystemDesign", "Microservices"]
+            }
+        ];
+
+        // State variables
+        let posts = [];
+        let activeCategory = 'All';
+        let currentSearchQuery = '';
+        let currentPostId = null;
+
+        function initApp() {
+            // Load theme
+            initTheme();
+
+            // Load stored posts or populate initial
+            const storedPosts = localStorage.getItem('auralog_posts');
+            if (storedPosts) {
+                try {
+                    posts = JSON.parse(storedPosts);
+                } catch (e) {
+                    posts = INITIAL_POSTS;
+                }
+            } else {
+                posts = INITIAL_POSTS;
+                savePostsToStorage();
+            }
+
+            // Check URL query parameters or hash to navigate to specific post
+            const urlParams = new URLSearchParams(window.location.search);
+            const postIdFromUrl = urlParams.get('post');
+
+            buildCategoryPills();
+            renderPosts();
+
+            if (postIdFromUrl) {
+                openArticle(postIdFromUrl, false);
+            }
+        }
+
+        function savePostsToStorage() {
+            try {
+                localStorage.setItem('auralog_posts', JSON.stringify(posts));
+            } catch (err) {
+                console.error("Storage limit reached:", err);
+            }
+        }
+
+        function initTheme() {
+            const isDark = localStorage.getItem('auralog_theme') === 'dark' || 
+                (!('auralog_theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+                document.getElementById('moonIcon').classList.add('hidden');
+                document.getElementById('sunIcon').classList.remove('hidden');
+            } else {
+                document.documentElement.classList.remove('dark');
+                document.getElementById('moonIcon').classList.remove('hidden');
+                document.getElementById('sunIcon').classList.add('hidden');
+            }
+        }
+
+        function toggleTheme() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('auralog_theme', isDark ? 'dark' : 'light');
+            document.getElementById('moonIcon').classList.toggle('hidden', isDark);
+            document.getElementById('sunIcon').classList.toggle('hidden', !isDark);
+        }
+
+        function buildCategoryPills() {
+            const container = document.getElementById('categoryPills');
+            const categories = ['All', 'Tech', 'Design', 'Architecture', 'Tutorials'];
+
+            container.innerHTML = categories.map(cat => {
+                const isActive = activeCategory === cat;
+                const activeClasses = isActive 
+                    ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-500/20' 
+                    : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800';
+                
+                return `
+                    <button 
+                        onclick="setCategory('${cat}')" 
+                        class="px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${activeClasses}"
+                    >
+                        ${cat}
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function setCategory(cat) {
+            activeCategory = cat;
+            buildCategoryPills();
+            renderPosts();
+        }
+
+        function handleSearch(val) {
+            currentSearchQuery = val.trim().toLowerCase();
+            // Sync mobile and desktop inputs
+            document.getElementById('desktopSearchInput').value = val;
+            document.getElementById('mobileSearchInput').value = val;
+            renderPosts();
+        }
+
+        function renderPosts() {
+            const grid = document.getElementById('postsGrid');
+            const noResults = document.getElementById('noResultsState');
+            const postCountBadge = document.getElementById('postCountBadge');
+
+            const filtered = posts.filter(post => {
+                const matchesCategory = activeCategory === 'All' || post.category === activeCategory;
+                const matchesSearch = !currentSearchQuery || 
+                    post.title.toLowerCase().includes(currentSearchQuery) || 
+                    post.excerpt.toLowerCase().includes(currentSearchQuery) || 
+                    (post.tags && post.tags.some(t => t.toLowerCase().includes(currentSearchQuery)));
+                return matchesCategory && matchesSearch;
+            });
+
+            postCountBadge.textContent = `Showing ${filtered.length} ${filtered.length === 1 ? 'article' : 'articles'}`;
+
+            if (filtered.length === 0) {
+                grid.innerHTML = '';
+                noResults.classList.remove('hidden');
+                return;
+            }
+
+            noResults.classList.add('hidden');
+            grid.innerHTML = filtered.map(post => {
+                return `
+                    <article class="group bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800/80 p-6 flex flex-col justify-between hover:shadow-xl hover:shadow-indigo-500/5 hover:-translate-y-1 transition-all duration-200">
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between text-xs">
+                                <span class="px-2.5 py-1 rounded-lg font-semibold bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-300">
+                                    ${escapeHtml(post.category)}
+                                </span>
+                                <span class="text-slate-400 font-medium">${escapeHtml(post.readTime)}</span>
+                            </div>
+
+                            <h2 
+                                onclick="openArticle('${post.id}')" 
+                                class="text-xl font-bold tracking-tight text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 cursor-pointer transition-colors leading-snug"
+                            >
+                                ${escapeHtml(post.title)}
+                            </h2>
+
+                            <p class="text-slate-600 dark:text-slate-400 text-sm leading-relaxed line-clamp-3">
+                                ${escapeHtml(post.excerpt)}
+                            </p>
+                        </div>
+
+                        <div class="pt-6 mt-6 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
+                            <div class="flex items-center gap-2.5">
+                                <div class="w-7 h-7 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-[10px] font-bold text-slate-700 dark:text-slate-300">
+                                    ${escapeHtml(getInitials(post.author))}
+                                </div>
+                                <div class="text-xs font-medium text-slate-700 dark:text-slate-300">
+                                    ${escapeHtml(post.author)}
+                                </div>
+                            </div>
+
+                            <button 
+                                onclick="openArticle('${post.id}')" 
+                                class="text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 flex items-center gap-1 group/btn"
+                            >
+                                Read 
+                                <svg class="w-3.5 h-3.5 transform group-hover/btn:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                            </button>
+                        </div>
+                    </article>
+                `;
+            }).join('');
+        }
+
+        function openArticle(postId, pushHistory = true) {
+            const post = posts.find(p => p.id === postId);
+            if (!post) return;
+
+            currentPostId = postId;
+            document.getElementById('homeView').classList.add('hidden');
+            document.getElementById('postDetailView').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            // Populate view details
+            document.getElementById('detailCategory').textContent = post.category;
+            document.getElementById('detailReadTime').textContent = post.readTime;
+            document.getElementById('detailTitle').textContent = post.title;
+            document.getElementById('detailAuthorName').textContent = post.author;
+            document.getElementById('detailAuthorAvatar').textContent = getInitials(post.author);
+            document.getElementById('detailDate').textContent = post.date;
+            document.getElementById('detailContent').innerHTML = post.content;
+
+            // Tags
+            const tagsContainer = document.getElementById('detailTags');
+            if (post.tags && post.tags.length > 0) {
+                tagsContainer.innerHTML = post.tags.map(tag => `
+                    <span class="text-xs font-medium text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg">
+                        #${escapeHtml(tag)}
+                    </span>
+                `).join('');
+                tagsContainer.classList.remove('hidden');
+            } else {
+                tagsContainer.classList.add('hidden');
+            }
+
+            // Sync URL query
+            if (pushHistory) {
+                const url = new URL(window.location);
+                url.searchParams.set('post', postId);
+                window.history.pushState({}, '', url);
+            }
+
+            renderComments(postId);
+        }
+
+        function navigateToHome() {
+            currentPostId = null;
+            document.getElementById('postDetailView').classList.add('hidden');
+            document.getElementById('homeView').classList.remove('hidden');
+            
+            const url = new URL(window.location);
+            url.searchParams.delete('post');
+            window.history.pushState({}, '', url);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function getCommentsStorageKey(postId) {
+            return `auralog_comments_${postId}`;
+        }
+
+        function renderComments(postId) {
+            const commentsList = document.getElementById('commentsList');
+            const commentCountBadge = document.getElementById('commentCountBadge');
+            const stored = localStorage.getItem(getCommentsStorageKey(postId));
+            let comments = [];
+
+            if (stored) {
+                try {
+                    comments = JSON.parse(stored);
+                } catch(e) {
+                    comments = [];
+                }
+            }
+
+            commentCountBadge.textContent = comments.length;
+
+            if (comments.length === 0) {
+                commentsList.innerHTML = `
+                    <div class="text-center py-6 text-xs text-slate-400 dark:text-slate-500 italic">
+                        Be the first to share your thoughts on this writeup!
+                    </div>
+                `;
+                return;
+            }
+
+            commentsList.innerHTML = comments.map(c => `
+                <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-4 rounded-2xl space-y-2">
+                    <div class="flex items-center justify-between text-xs">
+                        <div class="flex items-center gap-2">
+                            <div class="w-6 h-6 rounded-full bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 font-bold flex items-center justify-center text-[10px]">
+                                ${escapeHtml(getInitials(c.name))}
+                            </div>
+                            <span class="font-bold text-slate-800 dark:text-slate-200">${escapeHtml(c.name)}</span>
+                        </div>
+                        <span class="text-slate-400 text-[11px]">${escapeHtml(c.date)}</span>
+                    </div>
+                    <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed pl-8">
+                        ${escapeHtml(c.text)}
+                    </p>
+                </div>
+            `).join('');
+        }
+
+        function handleCommentSubmit(e) {
+            e.preventDefault();
+            if (!currentPostId) return;
+
+            const nameInput = document.getElementById('commenterName');
+            const textInput = document.getElementById('commentText');
+
+            const newComment = {
+                id: Date.now().toString(),
+                name: nameInput.value.trim(),
+                text: textInput.value.trim(),
+                date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+            };
+
+            const key = getCommentsStorageKey(currentPostId);
+            const existing = JSON.parse(localStorage.getItem(key) || '[]');
+            existing.unshift(newComment);
+            localStorage.setItem(key, JSON.stringify(existing));
+
+            nameInput.value = '';
+            textInput.value = '';
+            renderComments(currentPostId);
+            showToast('Comment published successfully!');
+        }
+
+        function openCreatePostModal() {
+            document.getElementById('createPostModal').classList.remove('hidden');
+            document.getElementById('createPostModal').classList.add('flex');
+        }
+
+        function closeCreatePostModal() {
+            document.getElementById('createPostModal').classList.add('hidden');
+            document.getElementById('createPostModal').classList.remove('flex');
+        }
+
+        function openGithubGuideModal() {
+            document.getElementById('githubModal').classList.remove('hidden');
+            document.getElementById('githubModal').classList.add('flex');
+        }
+
+        function closeGithubGuideModal() {
+            document.getElementById('githubModal').classList.add('hidden');
+            document.getElementById('githubModal').classList.remove('flex');
+        }
+
+        function handleNewPostSubmit(e) {
+            e.preventDefault();
+            const title = document.getElementById('newPostTitle').value.trim();
+            const category = document.getElementById('newPostCategory').value;
+            const author = document.getElementById('newPostAuthor').value.trim();
+            const excerpt = document.getElementById('newPostExcerpt').value.trim();
+            const content = document.getElementById('newPostContent').value.trim();
+
+            const wordCount = content.replace(/<[^>]*>/g, '').split(/\s+/).length;
+            const readTime = `${Math.max(1, Math.ceil(wordCount / 180))} min read`;
+
+            const newPost = {
+                id: title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') + '-' + Date.now().toString().slice(-4),
+                title,
+                category,
+                author,
+                excerpt,
+                content: content.startsWith('<') ? content : `<p>${content.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br/>')}</p>`,
+                readTime,
+                date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+                tags: [category, "Community"]
+            };
+
+            posts.unshift(newPost);
+            savePostsToStorage();
+            closeCreatePostModal();
+            renderPosts();
+            showToast('New post published successfully!');
+            openArticle(newPost.id);
+        }
+
+        function copyArticleLink() {
+            const url = window.location.href;
+            const tempInput = document.createElement("input");
+            tempInput.value = url;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            try {
+                document.execCommand('copy');
+                document.getElementById('copyBtnText').textContent = "Copied!";
+                setTimeout(() => {
+                    document.getElementById('copyBtnText').textContent = "Share Link";
+                }, 2000);
+                showToast("Article link copied to clipboard!");
+            } catch (err) {
+                showToast("Could not copy link automatically");
+            }
+            document.body.removeChild(tempInput);
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toastMessage');
+            toast.textContent = message;
+            toast.className = "fixed bottom-6 right-6 z-50 px-4 py-3 rounded-2xl shadow-xl flex items-center gap-2.5 text-sm font-semibold text-white bg-slate-900 dark:bg-indigo-600 transition-all duration-300 transform translate-y-0 opacity-100";
+            
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        function scrollToArticles() {
+            if (document.getElementById('homeView').classList.contains('hidden')) {
+                navigateToHome();
+            }
+            document.getElementById('articlesSection').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function getInitials(name) {
+            if (!name) return 'A';
+            return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+        }
+
+        function escapeHtml(string) {
+            if (!string) return '';
+            const div = document.createElement('div');
+            div.textContent = string;
+            return div.innerHTML;
+        }
+
+        // Handle browser Back / Forward buttons
+        window.addEventListener('popstate', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const postId = urlParams.get('post');
+            if (postId) {
+                openArticle(postId, false);
+            } else {
+                navigateToHome();
+            }
+        });
+
+        // Initialize when DOM is ready
+        window.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>
